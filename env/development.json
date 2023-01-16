@@ -12,11 +12,13 @@
     "numNodes": 1,
     "firstNodeGroupName": "publicMain",
     "firstNodeGroupLabel": "publicMain",
+    "firstNodeGroupInstanceType": "t3.micro",
     "secondNodeGroupName": "privateMain",
-    "secondNodeGroupLabel": "privateMain"
+    "secondNodeGroupLabel": "privateMain",
+    "secondNodeGroupInstanceType": "t3.micro"
   },
   "rds": {
-    "instanceClass": "db.t2.micro",
+    "instanceClass": "db.t3.micro",
     "instanceIdentifier": "platform-mariadb-dev",
     "username": "master",
     "password": "87654321",

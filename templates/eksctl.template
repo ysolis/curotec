@@ -1,0 +1,44 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: {{ eks.name }}
+  region: {{ ENV['AWS_DEFAULT_REGION'] }}
+
+vpc:
+  id: "{{ ENV['VPC_ID'] }}"
+  subnets:
+    private:
+      {{ vpc.availabilityZone[0] }}:
+        id: "{{ ENV['SUBNET_PRIV_A_ID'] }}"
+      {{ vpc.availabilityZone[1] }}:
+        id: "{{ ENV['SUBNET_PRIV_B_ID'] }}"
+      {{ vpc.availabilityZone[2] }}:
+        id: "{{ ENV['SUBNET_PRIV_C_ID'] }}"
+    public:
+      {{ vpc.availabilityZone[0] }}:
+        id: "{{ ENV['SUBNET_PUB_A_ID'] }}"
+      {{ vpc.availabilityZone[1] }}:
+        id: "{{ ENV['SUBNET_PUB_B_ID'] }}"
+      {{ vpc.availabilityZone[2] }}:
+        id: "{{ ENV['SUBNET_PUB_C_ID'] }}"
+
+nodeGroups:
+  - name: {{ eks.firstNodeGroupName }}
+    labels:
+      nodegroup-type: {{ eks.firstNodeGroupLabel }}
+    instanceType: {{ eks.firstNodeGroupInstanceType }}
+    desiredCapacity: {{ eks.numNodes }}
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+
+  - name: {{ eks.secondNodeGroupName }}
+    labels:
+      nodegroup-type: {{ eks.secondNodeGroupLabel }}
+    instanceType: {{ eks.secondNodeGroupInstanceType }}
+    desiredCapacity: {{ eks.numNodes }}
+    privateNetworking: true
+    iam:
+      withAddonPolicies:
+        autoScaler: true
