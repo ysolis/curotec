@@ -14,5 +14,24 @@
     "firstNodeGroupLabel": "publicMain",
     "secondNodeGroupName": "privateMain",
     "secondNodeGroupLabel": "privateMain"
+  },
+  "rds": {
+    "instanceClass": "db.t2.micro",
+    "instanceIdentifier": "platform-mariadb-dev",
+    "username": "master",
+    "password": "87654321",
+    "monitoringInterval": 10,
+    "multi_az": false,
+    "encrypted": false,
+    "EC2SecurityGroup": {
+      "name": "platform-segr-mariadb-dev",
+      "description": "EC2 Security group for RDS mariadb"
+    },
+    "dbSecurityGroup": {
+      "description": "DB Security group for RDS mariadb"
+    },
+    "subnetGroup": {
+      "name": "platform-mariadb-subnet-group-dev"
+    }
   }
 }

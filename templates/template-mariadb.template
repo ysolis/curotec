@@ -1,0 +1,69 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Instance MariaDB",
+  "Parameters": {
+    "VPCStackName": {
+      "Description": "Name of VPC cf stack",
+      "Type": "String",
+      "MinLength" : 1,
+      "MaxLength" : 255,
+      "AllowedPattern" : "^[a-zA-Z][-a-zA-Z0-9]*$",
+      "Default" : "platform-development-vpc"
+    }
+  },
+  "Resources": {
+    "SubnetGroupDocDB": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet group for MariaDB",
+        "DBSubnetGroupName": "{{ rds.subnetGroup.name }}",
+        "SubnetIds": [ "Fn::ImportValue": { "Fn::Sub": "${VPCStackName}-SubnetPrivA" }, "Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-SubnetPrivB" }, "Fn::ImportValue": {"Fn::Sub": "${VPCStackName}-SubnetPrivC" } ]
+      }
+    },
+    "EC2SegrMariaDB": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+           "GroupName": "{{ rds.EC2SecurityGroup.name }}",
+           "GroupDescription": "{{rds.EC2SecurityGroup.description}}",
+           "SecurityGroupIngress": [
+               {
+                   "Description": "Ingress to listener",
+                   "FromPort": 5432,
+                   "IpProtocol": "TCP",
+                   "ToPort": 5432,
+                   "CidrIp": "{{ vpc.cidrBlock }}"
+                }],
+          "VpcId": { "Fn::ImportValue" : { "Fn::Sub": "${VPCStackName}-VPC" } }
+        }
+    },
+    "instanceMariaDB": {
+      "Type" : "AWS::RDS::DBInstance",
+      "Properties" : {
+          "AllocatedStorage": "10",
+          "AutoMinorVersionUpgrade": true,
+          "BackupRetentionPeriod": 15,
+          "DBInstanceClass": "{{rds.instanceClass}}",
+          "DBInstanceIdentifier": "{{rds.instanceIdentifier}}",
+          "VPCSecurityGroups":  [{"Ref" : "EC2SegrMariaDB"}],
+          "DBSubnetGroupName": "{{rds.subnetGroup.name}}",
+          "DeleteAutomatedBackups": true,
+          "EnablePerformanceInsights": false,
+          "Engine": "mariadb",
+          "EngineVersion": "10.6",
+          "MasterUsername": "{{ rds.username }}",
+          "MasterUserPassword": "{{ rds.password }}",
+          "MultiAZ": {{ rds.multi_az }},
+          "StorageEncrypted": {{ rds.encrypted }}
+      },
+      "DependsOn": ["EC2SegrMariaDB"]
+    }
+  },
+
+  "Outputs" : {
+      "MariaDBConnectionString" : {
+          "Description" : "Connection String for RDS MariaDB",
+           "Value" : { "Fn::GetAtt" : [ "instanceMariaDB", "Endpoint.Address" ]},
+          "Export" : {"Name": {"Fn::Sub": "${AWS::StackName}-mariadb-url"  }}
+      }
+  }
+}
