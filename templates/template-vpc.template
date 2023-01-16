@@ -1,0 +1,367 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "VPC of the EKS(eksctl) cluster",
+  "Resources": {
+    "platformInternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}/platformInternetGateway"
+            }
+          }
+        ]
+      }
+    },
+    "platformNatIP": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "platformVPC"
+      }
+    },
+    "platformNATGateway": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": "platformNatIP.AllocationId"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPublicA"
+        }
+      }
+    },
+    "platformNATPrivateSubnetRouteA": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "platformNATGateway"
+        },
+        "RouteTableId": {
+          "Ref": "platformPrivateRouteTableA"
+        }
+      }
+    },
+    "platformNATPrivateSubnetRouteB": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "platformNATGateway"
+        },
+        "RouteTableId": {
+          "Ref": "platformPrivateRouteTableB"
+        }
+      }
+    },
+    "platformNATPrivateSubnetRouteC": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "platformNATGateway"
+        },
+        "RouteTableId": {
+          "Ref": "platformPrivateRouteTableC"
+        }
+      }
+    },
+    "platformPrivateRouteTableA": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformPrivateRouteTableB": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformPrivateRouteTableC": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformPublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformPublicSubnetRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "platformInternetGateway"
+        },
+        "RouteTableId": {
+          "Ref": "platformPublicRouteTable"
+        }
+      }
+    },
+    "platformRouteTableAssociationPrivateA": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "platformPrivateRouteTableA"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPrivateA"
+        }
+      }
+    },
+    "platformRouteTableAssociationPrivateB": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "platformPrivateRouteTableB"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPrivateB"
+        }
+      }
+    },
+    "platformRouteTableAssociationPrivateC": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "platformPrivateRouteTableC"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPrivateC"
+        }
+      }
+    },
+    "platformRouteTableAssociationPublicA": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "platformPublicRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPublicA"
+        }
+      }
+    },
+    "platformRouteTableAssociationPublicB": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "platformPublicRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPublicB"
+        }
+      }
+    },
+    "platformRouteTableAssociationPublicC": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "platformPublicRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "platformSubnetPublicC"
+        }
+      }
+    },
+    "platformSubnetPrivateA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "{{vpc.availabilityZone[0] }}",
+        "CidrBlock": "{{ vpc.privateSubnetCidrBlock[0] }}",
+        "Tags": [
+          {
+            "Key": "kubernetes.io/role/internal-elb",
+            "Value": "1"
+          },
+          {
+            "Key": "kubernetes.io/cluster/{{ eks.name }}",
+            "Value": "shared"
+          }
+        ],
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformSubnetPrivateB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "{{vpc.availabilityZone[1] }}",
+        "CidrBlock": "{{ vpc.privateSubnetCidrBlock[1] }}",
+        "Tags": [
+          {
+            "Key": "kubernetes.io/role/internal-elb",
+            "Value": "1"
+          },
+          {
+            "Key": "kubernetes.io/cluster/{{ eks.name }}",
+            "Value": "shared"
+          }
+        ],
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformSubnetPrivateC": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "{{ vpc.availabilityZone[2] }}",
+        "CidrBlock": "{{ vpc.privateSubnetCidrBlock[2] }}",
+        "Tags": [
+          {
+            "Key": "kubernetes.io/role/internal-elb",
+            "Value": "1"
+          },
+          {
+            "Key": "kubernetes.io/cluster/{{ eks.name }}",
+            "Value": "shared"
+          }
+        ],
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformSubnetPublicA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "{{ vpc.availabilityZone[0] }}",
+        "CidrBlock": "{{ vpc.publicSubnetCidrBlock[0] }}",
+        "Tags": [
+          {
+            "Key": "kubernetes.io/role/elb",
+            "Value": "1"
+          },
+          {
+            "Key": "kubernetes.io/cluster/{{ eks.name }}",
+            "Value": "shared"
+          }
+        ],
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformSubnetPublicB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "{{ vpc.availabilityZone[1] }}",
+        "CidrBlock": "{{ vpc.publicSubnetCidrBlock[1] }}",
+        "Tags": [
+          {
+            "Key": "kubernetes.io/role/elb",
+            "Value": "1"
+          },
+          {
+            "Key": "kubernetes.io/cluster/{{ eks.name }}",
+            "Value": "shared"
+          }
+        ],
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformSubnetPublicC": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": "{{ vpc.availabilityZone[2] }}",
+        "CidrBlock": "{{ vpc.publicSubnetCidrBlock[2] }}",
+        "Tags": [
+          {
+            "Key": "kubernetes.io/role/elb",
+            "Value": "1"
+          },
+          {
+            "Key": "kubernetes.io/cluster/{{ eks.name }}",
+            "Value": "shared"
+          }
+        ],
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    },
+    "platformVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "{{ vpc.cidrBlock }}",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "{{ vpc.name }}"
+            }
+          }
+        ]
+      }
+    },
+    "platformVPCGatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "platformInternetGateway"
+        },
+        "VpcId": {
+          "Ref": "platformVPC"
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+    "VpcId": {
+      "Description": "VPC id",
+      "Value": { "Ref": "platformVPC" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-VPC"  }}
+    },
+    "SubnetPrivateAId": {
+      "Description": "subnet private A id",
+      "Value": { "Ref": "platformSubnetPrivateA" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-SubnetPrivA"  }}
+    },
+    "SubnetPrivateBId": {
+      "Description": "subnet private B id",
+      "Value": { "Ref": "platformSubnetPrivateB" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-SubnetPrivB"  }}
+    },
+    "SubnetPrivateCId": {
+      "Description": "subnet private C id",
+      "Value": { "Ref": "platformSubnetPrivateC" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-SubnetPrivC"  }}
+    },
+    "SubnetPublicAId": {
+      "Description": "subnet public A id",
+      "Value": { "Ref": "platformSubnetPublicA" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-SubnetPubA"  }}
+    },
+    "SubnetPublicBId": {
+      "Description": "subnet public B id",
+      "Value": { "Ref": "platformSubnetPublicB" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-SubnetPubB"  }}
+    },
+    "SubnetPublicCId": {
+      "Description": "subnet public C id",
+      "Value": { "Ref": "platformSubnetPublicC" },
+      "Export": { "Name": {"Fn::Sub": "${AWS::StackName}-SubnetPubC"  }}
+    }
+  }
+}

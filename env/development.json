@@ -1,0 +1,18 @@
+{
+  "environment": "development",
+  "vpc": {
+    "name": "platformVPC/dev",
+    "cidrBlock": "192.168.0.0/16",
+    "availabilityZone": ["us-west-2a", "us-west-2b", "us-west-2c"],
+    "privateSubnetCidrBlock": ["192.168.96.0/19", "192.168.128.0/19", "192.168.160.0/19"],
+    "publicSubnetCidrBlock": ["192.168.0.0/19", "192.168.32.0/19", "192.168.64.0/19"]
+  },
+  "eks": {
+    "name": "platformEKS-dev",
+    "numNodes": 1,
+    "firstNodeGroupName": "publicMain",
+    "firstNodeGroupLabel": "publicMain",
+    "secondNodeGroupName": "privateMain",
+    "secondNodeGroupLabel": "privateMain"
+  }
+}
