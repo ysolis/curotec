@@ -1,0 +1,6 @@
+name: build vpc and eks
+on: [push]
+jobs:
+  build-vpc:
+    steps:
+      - run: echo 1
